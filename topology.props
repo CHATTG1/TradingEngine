@@ -1,0 +1,14 @@
+topologyName=syslog
+killIfRunning=true
+zk.hosts=hdp.dev:2181
+numWorkers=1
+localMode=true
+
+dataSourceClassName=org.apache.phoenix.PhoenixDriver
+dataSource.url=jdbc:phoenix:hdp.dev:2181:/hbase-unsecure
+dataSource.user=
+dataSource.password=
+
+# Kafka Spout config
+syslog.topic=syslog
+syslog.consumerGroupID=syslog
