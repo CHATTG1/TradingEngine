@@ -8,8 +8,7 @@ class PyBolt(storm.BasicBolt):
 #Uncomment for local testing
 #for message in sys.stdin:
   def process(self, tuple):
-    tup = json.loads(tuple.values[0])
-
+    tup = json.loads(tuple.values[0])['resource']['fields']
     out = [tup['name'], tup['price'], tup['symbol'], tup['ts'], tup['type'], tup['volume']]
     storm.emit(out)
     #Uncomment for local testing

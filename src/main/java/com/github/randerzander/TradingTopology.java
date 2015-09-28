@@ -20,14 +20,6 @@ import backtype.storm.spout.SchemeAsMultiScheme;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.topology.SpoutDeclarer;
 
-import org.apache.storm.hdfs.bolt.HdfsBolt;
-import org.apache.storm.hdfs.bolt.sync.CountSyncPolicy;
-import org.apache.storm.hdfs.bolt.format.DelimitedRecordFormat;
-import org.apache.storm.hdfs.bolt.rotation.FileRotationPolicy;
-import org.apache.storm.hdfs.bolt.rotation.FileSizeRotationPolicy;
-import org.apache.storm.hdfs.bolt.rotation.FileSizeRotationPolicy.Units;
-import com.github.randerzander.StormCommon.utils.DateTimeFileNameFormat;
-
 import org.apache.storm.jdbc.bolt.JdbcInsertBolt;
 import org.apache.storm.jdbc.mapper.SimpleJdbcMapper;
 import org.apache.storm.jdbc.mapper.JdbcMapper;
@@ -66,14 +58,19 @@ public class TradingTopology {
       builder.setBolt("parser", new PyBolt("parser.py", rawFields, -1)).shuffleGrouping("quotes");
 
       //Setup strategy executor
+      /*
       String[] outFields = new String[]{"ts", "strategy", "symbol", "price", "volume"};
       builder.setBolt("strategy_executor", new PyBolt("stategy_executor.py", outFields, -1))
         .fieldsGrouping("parser", new Fields("symbol"));
+      */
 
       //Setup Phoenix output
       Map hikariConfigMap = Maps.newHashMap();
-      String[] jdbcProps = new String[]{"dataSourceClassName", "dataSource.url", "dataSource.user", "dataSource.password"};
-      for (String prop: jdbcProps) hikariConfigMap.put(prop, props.get(prop));
+      String[] jdbcProps = new String[]{"dataSourceClassName", "dataSource.url", "dataSource.user", "dataSource.password", "driverClassName", "jdbcUrl"};
+      for (String prop: jdbcProps){
+        String val = props.get(prop);
+        if (val != null) hikariConfigMap.put(prop, props.get(prop));
+      }
       ConnectionPrvoider connectionProvider = new HikariCPConnectionProvider(hikariConfigMap);
 
       List<Column> columnSchema = Lists.newArrayList();
@@ -88,6 +85,7 @@ public class TradingTopology {
         .withQueryTimeoutSecs(-1)
       ).shuffleGrouping("parser");
 
+      /*
       columnSchema.add(new Column("ts", java.sql.Types.BIGINT));
       columnSchema.add(new Column("strategy", java.sql.Types.VARCHAR));
       columnSchema.add(new Column("symbol", java.sql.Types.VARCHAR));
@@ -97,6 +95,7 @@ public class TradingTopology {
         .withInsertQuery("upsert into ORDERS values (?, ?, ?, ?, ?)")
         .withQueryTimeoutSecs(-1)
       ).shuffleGrouping("strategy_executor");
+      */
         
       Utils.run(builder, props.get("topologyName"), conf, props.get("killIfRunning").equals("true"), props.get("localMode").equals("true"));
     }
